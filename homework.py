@@ -114,7 +114,7 @@ def parse_status(homework) -> str:
     if homework_status not in homework_verdicts.keys():
         logging.error(
             f'Недокументированный статус. homework_status={homework_status}'
-            )
+        )
         raise KeyError('Недокументированный статус')
 
     verdict = homework_verdicts[homework_status]
