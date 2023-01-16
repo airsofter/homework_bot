@@ -1,12 +1,10 @@
 import os
 import logging
-# from logging.handlers import RotatingFileHandler
 import time
 from http import HTTPStatus
 
 import requests
 from dotenv import load_dotenv
-# from telegram.ext import Updater, CommandHandler
 import telegram
 
 
