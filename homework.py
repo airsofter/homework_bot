@@ -18,6 +18,12 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+# На удаление этой переменной тесты тоже ругаются(
+HOMEWORK_VERDICTS = {
+    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
+    'reviewing': 'Работа взята на проверку ревьюером.',
+    'rejected': 'Работа проверена: у ревьюера есть замечания.'
+}
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -98,11 +104,6 @@ def parse_status(homework) -> str:
     """Извлечение информации о домашней работе."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
-    homework_verdicts = {
-        'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
-        'reviewing': 'Работа взята на проверку ревьюером.',
-        'rejected': 'Работа проверена: у ревьюера есть замечания.'
-    }
     if homework_name is None:
         logging.error('Отсутствует ключ "homework_name". '
                       f'homework_name={homework_name}')
@@ -111,13 +112,13 @@ def parse_status(homework) -> str:
         logging.error('Отсутствует ключ "homework_status". '
                       f'homework_status={homework_status}')
         raise KeyError('Отсутствует ключ "homework_status"')
-    if homework_status not in homework_verdicts.keys():
+    if homework_status not in HOMEWORK_VERDICTS.keys():
         logging.error(
             f'Недокументированный статус. homework_status={homework_status}'
         )
         raise KeyError('Недокументированный статус')
 
-    verdict = homework_verdicts[homework_status]
+    verdict = HOMEWORK_VERDICTS[homework_status]
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
