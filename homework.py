@@ -9,6 +9,7 @@ import telegram
 
 
 load_dotenv()
+# Не получилось вынести настройки в отдельный файл из за специфики тестов
 
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -23,12 +24,6 @@ logging.basicConfig(
     filename='program.log',
     level=logging.DEBUG
 )
-
-HOMEWORK_VERDICTS = {
-    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
-    'reviewing': 'Работа взята на проверку ревьюером.',
-    'rejected': 'Работа проверена: у ревьюера есть замечания.'
-}
 
 
 def check_tokens() -> bool:
@@ -69,11 +64,17 @@ def get_api_answer(timestamp) -> dict:
                                 headers=HEADERS,
                                 params={'from_date': timestamp})
     except Exception as error:
-        logging.error(f'Ошибка при запросе к основному API: {error}')
+        logging.error(f'Ошибка при запросе к основному API: {error}. '
+                      f'Данные: ENDPOINT={ENDPOINT}, headers={HEADERS}, '
+                      f'from_date={timestamp}')
 
     if response.status_code != HTTPStatus.OK:
-        logging.error('Нет доступа к API')
+        logging.error(f'Нет доступа к API. Код ответа: {response.status_code}')
         raise requests.RequestException('Нет доступа к API')
+    try:
+        response.json()
+    except Exception as error:
+        logging.error(f'Ответ сервера не в формате json. {error}')
 
     return response.json()
 
@@ -97,17 +98,26 @@ def parse_status(homework) -> str:
     """Извлечение информации о домашней работе."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
+    homework_verdicts = {
+        'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
+        'reviewing': 'Работа взята на проверку ревьюером.',
+        'rejected': 'Работа проверена: у ревьюера есть замечания.'
+    }
     if homework_name is None:
-        logging.error('Отсутствует ключ "homework_name"')
+        logging.error('Отсутствует ключ "homework_name". '
+                      f'homework_name={homework_name}')
         raise KeyError('Отсутствует ключ "homework_name"')
     if homework_status is None:
-        logging.error('Отсутствует ключ "homework_status"')
+        logging.error('Отсутствует ключ "homework_status". '
+                      f'homework_status={homework_status}')
         raise KeyError('Отсутствует ключ "homework_status"')
-    if homework_status not in HOMEWORK_VERDICTS.keys():
-        logging.error('Недокументированный статус')
+    if homework_status not in homework_verdicts.keys():
+        logging.error(
+            f'Недокументированный статус. homework_status={homework_status}'
+            )
         raise KeyError('Недокументированный статус')
 
-    verdict = HOMEWORK_VERDICTS[homework_status]
+    verdict = homework_verdicts[homework_status]
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -116,6 +126,7 @@ def main():
     """Основная логика работы бота."""
     if check_tokens():
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        error_message = ''
         while True:
             try:
                 timestamp = int(time.time())
@@ -130,11 +141,11 @@ def main():
 
             except Exception as error:
                 message = f'Сбой в работе программы: {error}'
-                send_message(bot, message)
+                if message != error_message:
+                    error_message = message
+                    send_message(bot, message)
             finally:
                 time.sleep(RETRY_PERIOD)
-    else:
-        logging.critical('Отсутствуют переменные окружения')
 
 
 if __name__ == '__main__':
