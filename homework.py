@@ -34,7 +34,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens() -> bool:
-    """Проверка наличия токенов"""
+    """Проверка наличия токенов."""
     check = True
     if not PRACTICUM_TOKEN:
         check = False
@@ -53,7 +53,7 @@ def check_tokens() -> bool:
 
 
 def send_message(bot, message):
-    """Отправка сообщения"""
+    """Отправка сообщения."""
     try:
         bot.send_message(
             chat_id=TELEGRAM_CHAT_ID,
@@ -65,7 +65,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp) -> dict:
-    """Запрос к API"""
+    """Запрос к API."""
     try:
         response = requests.get(ENDPOINT,
                                 headers=HEADERS,
@@ -81,7 +81,7 @@ def get_api_answer(timestamp) -> dict:
 
 
 def check_response(response) -> list:
-    """Проверка ответа API на соответствие документации"""
+    """Проверка ответа API на соответствие документации."""
     if type(response) is not dict:
         logging.error('Объект response не является словарем')
         raise TypeError('Объект response не является словарем')
@@ -96,7 +96,7 @@ def check_response(response) -> list:
 
 
 def parse_status(homework) -> str:
-    """Извлечение информации о домашней работе"""
+    """Извлечение информации о домашней работе."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     if homework_name is None:
