@@ -1,4 +1,3 @@
-from os import path
 import logging
 import logging.config
 import time
